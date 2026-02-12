@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Feedback Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .stars {
+            font-size: 40px;
+            cursor: pointer;
+            color: gray;
+        }
+
+        .star.selected {
+            color: gold;
+        }
+
+        textarea {
+            width: 90%;
+            max-width: 400px;
+            height: 100px;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .stats {
+            margin-top: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .feedback-list {
+            margin-top: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+        }
+
+        .feedback-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⭐ Customer Feedback Portal</h1>
+
+    <div id="starContainer">
+        <span class="stars star" data-value="1">★</span>
+        <span class="stars star" data-value="2">★</span>
+        <span class="stars star" data-value="3">★</span>
+        <span class="stars star" data-value="4">★</span>
+        <span class="stars star" data-value="5">★</span>
+    </div>
+
+    <br>
+
+    <textarea id="comment" placeholder="Write your feedback (optional)"></textarea>
+    <br>
+    <button onclick="submitFeedback()">Submit Feedback</button>
+
+    <div class="stats">
+        <h3>📊 Rating Summary</h3>
+        <p>Average Rating: <span id="average">0</span> ⭐</p>
+        <p>Total Reviews: <span id="total">0</span></p>
+    </div>
+
+    <div class="feedback-list" id="feedbackList"></div>
+
+<script>
+    let selectedRating = 0;
+
+    const stars = document.querySelectorAll(".star");
+
+    stars.forEach(star => {
+        star.addEventListener("click", function () {
+            selectedRating = this.getAttribute("data-value");
+            highlightStars(selectedRating);
+        });
+    });
+
+    function highlightStars(rating) {
+        stars.forEach(star => {
+            star.classList.remove("selected");
+            if (star.getAttribute("data-value") <= rating) {
+                star.classList.add("selected");
+            }
+        });
+    }
+
+    function getFeedbacks() {
+        return JSON.parse(localStorage.getItem("feedbacks")) || [];
+    }
+
+    function saveFeedbacks(feedbacks) {
+        localStorage.setItem("feedbacks", JSON.stringify(feedbacks));
+    }
+
+    function submitFeedback() {
+        if (selectedRating == 0) {
+            alert("Please select a rating!");
+            return;
+        }
+
+        const comment = document.getElementById("comment").value;
+        const feedbacks = getFeedbacks();
+
+        feedbacks.push({
+            rating: Number(selectedRating),
+            comment: comment,
+            date: new Date().toLocaleString()
+        });
+
+        saveFeedbacks(feedbacks);
+
+        selectedRating = 0;
+        highlightStars(0);
+        document.getElementById("comment").value = "";
+
+        loadStats();
+        loadFeedbacks();
+
+        alert("Thank you for your feedback!");
+    }
+
+    function loadStats() {
+        const feedbacks = getFeedbacks();
+        const total = feedbacks.length;
+
+        let avg = 0;
+        if (total > 0) {
+            const sum = feedbacks.reduce((acc, item) => acc + item.rating, 0);
+            avg = (sum / total).toFixed(1);
+        }
+
+        document.getElementById("average").innerText = avg;
+        document.getElementById("total").innerText = total;
+    }
+
+    function loadFeedbacks() {
+        const feedbacks = getFeedbacks();
+        const container = document.getElementById("feedbackList");
+        container.innerHTML = "";
+
+        feedbacks.slice().reverse().forEach(item => {
+            const div = document.createElement("div");
+            div.className = "feedback-item";
+            div.innerHTML = `
+                <strong>${item.rating} ⭐</strong><br>
+                ${item.comment ? item.comment : "<i>No comment</i>"}<br>
+                <small>${item.date}</small>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    loadStats();
+    loadFeedbacks();
+</script>
+
+</body>
+</html>
